@@ -1,36 +1,69 @@
 import XCTest
 
+enum UITestL10n {
+    static func string(_ key: String) -> String {
+        let preferredLanguages = Locale.preferredLanguages
+        let locale = Locale(identifier: preferredLanguages.first ?? "ja")
+
+        switch (key, locale.language.languageCode?.identifier) {
+        case ("add", "ja"):
+            return "追加"
+        case ("cancel", "ja"):
+            return "キャンセル"
+        case ("save", "ja"):
+            return "保存"
+        default:
+            return key
+        }
+    }
+
+    static let add = string("add")
+    static let cancel = string("cancel")
+    static let save = string("save")
+}
+
 final class MemoUITests: XCTestCase {
+    private var app: XCUIApplication!
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
 
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
+        app = XCUIApplication()
+        app.launchArguments = ["-ui-testing"]
         app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
     }
 
-    @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+    func testCreateMemoOpenChatAndSendMessage() throws {
+        let addButton = app.buttons["memoList.addButton"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        addButton.tap()
+
+        let alert = app.alerts.firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout: 2))
+
+        let textField = alert.textFields.firstMatch
+        XCTAssertTrue(textField.exists)
+        textField.tap()
+        textField.typeText("E2E Memo")
+
+        alert.buttons[UITestL10n.add].tap()
+
+        let memoCell = app.tables.cells.staticTexts["E2E Memo"]
+        XCTAssertTrue(memoCell.waitForExistence(timeout: 2))
+        memoCell.tap()
+
+        let inputTextView = app.textViews["chat.inputTextView"]
+        XCTAssertTrue(inputTextView.waitForExistence(timeout: 2))
+        inputTextView.tap()
+        inputTextView.typeText("Hello from E2E")
+
+        app.buttons["chat.sendButton"].tap()
+
+        let message = app.staticTexts["Hello from E2E"]
+        XCTAssertTrue(message.waitForExistence(timeout: 2))
+
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+
+        XCTAssertTrue(memoCell.waitForExistence(timeout: 2))
     }
 }

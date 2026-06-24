@@ -4,13 +4,19 @@ import SwiftData
 @main
 struct MemoApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
+        let schema: Schema = Schema([
             Item.self,
+            ChatMessage.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let isUITesting = CommandLine.arguments.contains("-ui-testing")
 
+        let configuration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: isUITesting
+        )
+        
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            return try ModelContainer(for: schema, configurations: [configuration])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }

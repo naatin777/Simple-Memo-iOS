@@ -3,9 +3,19 @@ import SwiftData
 
 @Model
 final class Item {
-    var timestamp: Date
+    @Attribute(.unique) var id: UUID
+    var title: String
+    var updatedAt: Date
+    var orderIndex: Int
     
-    init(timestamp: Date) {
-        self.timestamp = timestamp
+    @Relationship(deleteRule: .cascade, inverse: \ChatMessage.item)
+    var messages: [ChatMessage]
+    
+    init(id: UUID = UUID(), title: String, updatedAt: Date = Date(), orderIndex: Int = 0, messages: [ChatMessage] = []) {
+        self.id = id
+        self.title = title
+        self.updatedAt = updatedAt
+        self.orderIndex = orderIndex
+        self.messages = messages
     }
 }
